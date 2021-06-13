@@ -57,6 +57,28 @@ class Query(MeQuery, graphene.ObjectType):
         return chat.messages.all()
 
 
+class CreateChat(graphene.Mutation):
+    chat = graphene.Field(ChatType)
+    error = graphene.String()
+
+    class Arguments:
+        emails = graphene.String(required=True)
+        group = graphene.Boolean()
+
+    @classmethod
+    def mutate(cls, info, emails, group):
+        emails = emails.split(",")
+        if not group:
+            if len(emails) > 2:
+                return CreateChat(error="you cannot have more then two participants if this is not a group")
+            else:
+                # get user and add to chat participants
+                pass
+        else:
+            # create chat and add the paerticipants
+            pass
+
+
 class SendMessage(graphene.Mutation):
     message = graphene.Field(MessageType)
 
@@ -64,6 +86,7 @@ class SendMessage(graphene.Mutation):
         message = graphene.String(required=True)
         chat_id = graphene.Int(required=True)
 
+    @classmethod
     def mutate(cls, info, message, chat_id):
         user = info.context.user
         chat = Chat.objects.prefetch_related("participants").get(participants=user, id=chat_id)
@@ -75,21 +98,21 @@ class SendMessage(graphene.Mutation):
         chat.messages.add(message)
         users = [usr for usr in chat.participants.all() if usr != user]
         for usr in users:
-            OneNewMessage.broadcast(payload=message, group=usr.username)
+            OnNewMessage.broadcast(payload=message, group=usr.username)
         return SendMessage(message=message)
 
 
-class OneNewMessage(channels_graphql_ws.Subscription):
+class OnNewMessage(channels_graphql_ws.Subscription):
     message = graphene.Field(MessageType)
 
     class Arguments:
         chatroom = graphene.String()
 
-    def subscribe(cls,info, chatroom=None):
+    def subscribe(cls, info, chatroom=None):
         return [chatroom] if chatroom is not None else None
 
     def publish(self, info, chatroom=None):
-        return OneNewMessage(
+        return OnNewMessage(
             message=self
         )
 
@@ -99,7 +122,7 @@ class Mutations(AuthMutation, graphene.ObjectType):
 
 
 class Subscription(graphene.ObjectType):
-    on_new_message = OneNewMessage.Field()
+    on_new_message = OnNewMessage.Field()
 
 
 schema = graphene.Schema(query=Query, mutation=Mutations, subscription=Subscription)
