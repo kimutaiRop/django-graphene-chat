@@ -1,6 +1,7 @@
 import channels
 import channels_graphql_ws
 import graphene
+from django.contrib.auth.models import User
 from django.utils.timezone import now
 from graphene_django.filter import DjangoFilterConnectionField
 from graphql_auth import mutations
@@ -63,20 +64,38 @@ class CreateChat(graphene.Mutation):
 
     class Arguments:
         emails = graphene.String(required=True)
+        name = graphene.String()
         group = graphene.Boolean()
 
     @classmethod
-    def mutate(cls, info, emails, group):
+    def mutate(cls, _, info, emails, name, group):
         emails = emails.split(",")
         if not group:
             if len(emails) > 2:
                 return CreateChat(error="you cannot have more then two participants if this is not a group")
             else:
-                # get user and add to chat participants
-                pass
+                users = []
+                for email in emails:
+                    user = User.objects.get(email=email)
+                    users.append(user)
+                chat = Chat.objects.create(
+                    group=True,
+                    name=name
+                )
+                chat.participants.add(*users)
+                chat.save()
         else:
-            # create chat and add the paerticipants
-            pass
+            users = []
+            for email in emails:
+                user = User.objects.get(email=email)
+                users.append(user)
+            chat = Chat.objects.create(
+                group=True,
+                name=name
+            )
+            chat.participants.add(*users)
+            chat.save()
+        return CreateChat(chat=chat)
 
 
 class SendMessage(graphene.Mutation):
@@ -87,7 +106,7 @@ class SendMessage(graphene.Mutation):
         chat_id = graphene.Int(required=True)
 
     @classmethod
-    def mutate(cls, info, message, chat_id):
+    def mutate(cls, _, info, message, chat_id):
         user = info.context.user
         chat = Chat.objects.prefetch_related("participants").get(participants=user, id=chat_id)
         message = Message.objects.create(
@@ -123,6 +142,7 @@ class Mutations(AuthMutation, graphene.ObjectType):
 
 class Subscription(graphene.ObjectType):
     on_new_message = OnNewMessage.Field()
+    create_chat = CreateChat.Field()
 
 
 schema = graphene.Schema(query=Query, mutation=Mutations, subscription=Subscription)
