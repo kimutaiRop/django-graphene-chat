@@ -11,6 +11,9 @@ class Message(models.Model):
     deleted = models.BooleanField(default=False)
     read = models.BooleanField(default=False)
 
+    def __str__(self):
+        return f"{self.text}- read :{self.read} from : {self.sender}"
+
 
 class Chat(models.Model):
     participants = models.ManyToManyField(User)
@@ -20,4 +23,4 @@ class Chat(models.Model):
     last_modified = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"{self.name} - group: {self.group}"
+        return f"{self.id} {self.name} - group: {self.group}"

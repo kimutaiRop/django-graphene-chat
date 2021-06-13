@@ -77,7 +77,7 @@ class CreateChat(graphene.Mutation):
         group = graphene.Boolean()
 
     @classmethod
-    def mutate(cls, _, info, emails, name, group):
+    def mutate(cls, _, info, emails, group, name=None):
         emails = emails.split(",")
         if not group:
             if len(emails) > 2:
@@ -87,9 +87,9 @@ class CreateChat(graphene.Mutation):
                 for email in emails:
                     user = User.objects.get(email=email)
                     users.append(user)
+                # add condition not to create chat for two users twice
                 chat = Chat.objects.create(
-                    group=True,
-                    name=name
+                    group=False,
                 )
                 chat.participants.add(*users)
                 chat.save()
