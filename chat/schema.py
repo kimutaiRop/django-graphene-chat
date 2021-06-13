@@ -59,6 +59,15 @@ class Query(MeQuery, graphene.ObjectType):
 
 
 class CreateChat(graphene.Mutation):
+    """
+    to creeate a chat you need to pass
+        ``group`` which is boolean -> ``true`` or ``false``
+
+        ``emails`` string separeted with commas ``,`` they have to be valid users in the database
+
+        ``name`` if what you are creating is a group
+    """
+
     chat = graphene.Field(ChatType)
     error = graphene.String()
 
@@ -138,11 +147,11 @@ class OnNewMessage(channels_graphql_ws.Subscription):
 
 class Mutations(AuthMutation, graphene.ObjectType):
     send_message = SendMessage.Field()
+    create_chat = CreateChat.Field()
 
 
 class Subscription(graphene.ObjectType):
     on_new_message = OnNewMessage.Field()
-    create_chat = CreateChat.Field()
 
 
 schema = graphene.Schema(query=Query, mutation=Mutations, subscription=Subscription)

@@ -14,7 +14,7 @@ class Message(models.Model):
 
 class Chat(models.Model):
     participants = models.ManyToManyField(User)
-    name = models.CharField(max_length=200)
+    name = models.CharField(max_length=200, blank=True)
     group = models.BooleanField(default=False)
     messages = models.ManyToManyField(Message, blank=True)
     last_modified = models.DateTimeField(auto_now=True)
