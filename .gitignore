@@ -1,2 +1,10 @@
 db.sqlite3
 venv
+
+.idea
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
