@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "channels",
     "chat",
+    "channels_graphql_ws",
     'graphql_jwt.refresh_token.apps.RefreshTokenConfig'
 ]
 # graphene
